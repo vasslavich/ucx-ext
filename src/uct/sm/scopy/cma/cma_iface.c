@@ -55,6 +55,7 @@ static ucs_status_t uct_cma_iface_query(uct_iface_h tl_iface,
     uct_cma_iface_t *iface = ucs_derived_of(tl_iface, uct_cma_iface_t);
 
     uct_scopy_iface_query(&iface->super, iface_attr);
+        ucs_trace_func("sm cma IFace query");
 
     iface_attr->iface_addr_len      =
             ucs_sys_ns_is_default(UCS_SYS_NS_TYPE_PID) ?
@@ -131,12 +132,14 @@ static UCS_CLASS_INIT_FUNC(uct_cma_iface_t, uct_md_h md, uct_worker_h worker,
                               &uct_cma_iface_ops, md, worker, params,
                               tl_config);
 
+        ucs_trace_func("sm cma IFace init");
     return UCS_OK;
 }
 
 static UCS_CLASS_CLEANUP_FUNC(uct_cma_iface_t)
 {
     /* No op */
+        ucs_trace_func("sm cma IFace cleanup");
 }
 
 UCS_CLASS_DEFINE(uct_cma_iface_t, uct_scopy_iface_t);

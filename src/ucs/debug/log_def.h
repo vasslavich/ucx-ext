@@ -17,6 +17,15 @@
 #include <stdint.h>
 
 
+static inline void srr_ucx_log_invoke(const char * file, const char * func, int line, const char * format_, ...){
+    va_list args;
+    va_start(args, format_);
+    printf("\nSRR UCX >> "); vprintf(format_, args);
+    printf("\n           %s,  %s, %i\n", file, func, line);
+    printf("\n");
+    va_end(args);
+}
+
 BEGIN_C_DECLS
 
 /** @file log_def.h */
@@ -61,6 +70,14 @@ BEGIN_C_DECLS
         } \
     } while (0)
 
+extern void * p_UCX_LOG_DATA;
+extern void ucx_segfault();
+extern int UCX_TRACE_ON;
+extern int UCX_DBG_BREAK;
+#define UCX_SEGFAULT ucx_segfault();
+#define SRR_UCX_LOG_PRINT(format, ...) if(UCX_TRACE_ON){ \
+    srr_ucx_log_invoke(__FILE__, __FUNCTION__, __LINE__, (format) __VA_OPT__(,) __VA_ARGS__); \
+}
 
 /**
  * Print a message regardless of current log level. Output can be

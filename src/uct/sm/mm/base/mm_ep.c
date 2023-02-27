@@ -44,6 +44,8 @@ uct_mm_ep_attach_remote_seg(uct_mm_ep_t *ep, uct_mm_seg_id_t seg_id,
     ucs_status_t status;
     khiter_t khiter;
     int khret;
+    
+        ucs_trace_func("mm EP attach remote seg %"PRIu64, length);
 
     khiter = kh_put(uct_mm_remote_seg, &ep->remote_segs, seg_id, &khret);
     if (khret == -1) {
@@ -74,6 +76,8 @@ uct_mm_ep_get_remote_seg(uct_mm_ep_t *ep, uct_mm_seg_id_t seg_id, size_t length,
                          void **address_p)
 {
     khiter_t khiter;
+    
+        ucs_trace_func("mm EP get remote segment %"PRIu64, length);
 
     /* fast path - segment is already present */
     khiter = kh_get(uct_mm_remote_seg, &ep->remote_segs, seg_id);
@@ -93,6 +97,7 @@ static void uct_mm_ep_signal_remote(uct_mm_ep_t *ep)
     char dummy = 0;
     int ret;
 
+    ucs_trace_func("mm EP send signal to remote IFace via unix socket");
     ucs_trace("ep %p: signal remote", ep);
 
     for (;;) {
@@ -130,6 +135,7 @@ void uct_mm_ep_cleanup_remote_segs(uct_mm_ep_t *ep)
                                            uct_mm_iface_t);
     uct_mm_remote_seg_t remote_seg;
 
+        ucs_trace_func("mm EP remote segs cleanup");
     kh_foreach_value(&ep->remote_segs, remote_seg, {
         uct_mm_iface_mapper_call(iface, mem_detach, &remote_seg);
     })
@@ -145,6 +151,8 @@ static UCS_CLASS_INIT_FUNC(uct_mm_ep_t, const uct_ep_params_t *params)
     ucs_status_t status;
     void *fifo_ptr;
 
+        ucs_trace_func("mm EP cleanup");
+        
     UCT_EP_PARAMS_CHECK_DEV_IFACE_ADDRS(params);
     UCS_CLASS_CALL_SUPER_INIT(uct_base_ep_t, &iface->super.super);
 
@@ -271,6 +279,8 @@ static UCS_F_ALWAYS_INLINE ssize_t uct_mm_ep_am_common_send(
     void *desc_data;
 
     UCT_CHECK_AM_ID(am_id);
+    
+        ucs_trace_func("sm mm EP am send %"PRIu64, length);
 
 retry:
     head = ep->fifo_ctl->head;
@@ -381,6 +391,7 @@ ucs_status_t uct_mm_ep_am_short(uct_ep_h tl_ep, uint8_t id, uint64_t header,
     uct_mm_iface_t *iface = ucs_derived_of(tl_ep->iface, uct_mm_iface_t);
     uct_mm_ep_t *ep = ucs_derived_of(tl_ep, uct_mm_ep_t);
 
+        ucs_trace_func("sm mm EP am short %"PRIu32, length);
     UCT_CHECK_LENGTH(length + sizeof(header), 0,
                      iface->config.fifo_elem_size - sizeof(uct_mm_fifo_element_t),
                      "am_short");
@@ -397,6 +408,7 @@ ucs_status_t uct_mm_ep_am_short_iov(uct_ep_h tl_ep, uint8_t id,
     uct_mm_iface_t *iface = ucs_derived_of(tl_ep->iface, uct_mm_iface_t);
     uct_mm_ep_t *ep       = ucs_derived_of(tl_ep, uct_mm_ep_t);
 
+        ucs_trace_func("sm mm EP am short iov");
     UCT_CHECK_LENGTH(uct_iov_total_length(iov, iovcnt), 0,
                      iface->config.fifo_elem_size -
                              sizeof(uct_mm_fifo_element_t),
@@ -413,6 +425,7 @@ ssize_t uct_mm_ep_am_bcopy(uct_ep_h tl_ep, uint8_t id, uct_pack_callback_t pack_
     uct_mm_iface_t *iface = ucs_derived_of(tl_ep->iface, uct_mm_iface_t);
     uct_mm_ep_t *ep = ucs_derived_of(tl_ep, uct_mm_ep_t);
 
+        ucs_trace_func("sm mm EP am bcopy");
     return uct_mm_ep_am_common_send(UCT_MM_SEND_AM_BCOPY, ep, iface, id, 0, 0,
                                     NULL, pack_cb, arg, NULL, 0, flags);
 }

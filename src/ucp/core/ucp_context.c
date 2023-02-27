@@ -1083,21 +1083,26 @@ ucp_add_tl_resources(ucp_context_h context, ucp_md_index_t md_index,
     *num_resources_p = 0;
 
     /* check what are the available uct resources */
+        SRR_UCX_LOG_PRINT("");
     status = uct_md_query_tl_resources(md->md, &tl_resources, &num_tl_resources);
     if (status != UCS_OK) {
         ucs_error("Failed to query resources: %s", ucs_status_string(status));
         goto err;
     }
 
+        SRR_UCX_LOG_PRINT("");
     if (num_tl_resources == 0) {
         ucs_debug("No tl resources found for md %s", md->rsc.md_name);
         goto out_free_resources;
     }
 
+        SRR_UCX_LOG_PRINT("");
     tmp = ucs_realloc(context->tl_rscs,
                       sizeof(*context->tl_rscs) *
                       (context->num_tls + num_tl_resources),
                       "ucp resources");
+    
+        SRR_UCX_LOG_PRINT("");
     if (tmp == NULL) {
         ucs_error("Failed to allocate resources");
         status = UCS_ERR_NO_MEMORY;
@@ -1111,7 +1116,10 @@ ucp_add_tl_resources(ucp_context_h context, ucp_md_index_t md_index,
 
     /* copy only the resources enabled by user configuration */
     context->tl_rscs = tmp;
+        ucs_trace_data("ucs by %i resources", num_tl_resources);
+        
     for (i = 0; i < num_tl_resources; ++i) {
+                ucs_trace_data("tl_resources[i].dev_name");
         ucs_string_set_addf(&avail_devices[tl_resources[i].dev_type],
                             "'%s'(%s)", tl_resources[i].dev_name,
                             context->tl_cmpts[md->cmpt_index].attr.name);
@@ -2085,6 +2093,7 @@ ucp_version_check(unsigned api_major_version, unsigned api_minor_version)
     Dl_info dl_info;
     int ret;
 
+    SRR_UCX_LOG_PRINT("");
     ucp_get_version(&major_version, &minor_version, &release_number);
 
     if ((major_version == api_major_version) &&
@@ -2102,8 +2111,10 @@ ucp_version_check(unsigned api_major_version, unsigned api_minor_version)
     }
 
     if (ucs_log_is_enabled(log_level)) {
+        SRR_UCX_LOG_PRINT("");
         ret = dladdr(ucp_init_version, &dl_info);
         if (ret != 0) {
+            SRR_UCX_LOG_PRINT("");
             ucs_string_buffer_appendf(&strb, " (loaded from %s)",
                                       dl_info.dli_fname);
         }
@@ -2119,8 +2130,10 @@ ucs_status_t ucp_init_version(unsigned api_major_version, unsigned api_minor_ver
     ucp_context_t *context;
     ucs_status_t status;
 
+    SRR_UCX_LOG_PRINT("");
     ucp_version_check(api_major_version, api_minor_version);
-
+    SRR_UCX_LOG_PRINT("");
+    
     if (config == NULL) {
         status = ucp_config_read(NULL, NULL, &dfl_config);
         if (status != UCS_OK) {

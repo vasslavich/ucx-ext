@@ -241,6 +241,7 @@ static ucs_status_t uct_posix_shm_open(uint64_t mmid, int open_flags, int *fd_p)
     char file_name[NAME_MAX];
     int ret;
 
+        ucs_trace_func("mm PSX shm open");
     ucs_snprintf_safe(file_name, sizeof(file_name), UCT_POSIX_FILE_FMT, mmid);
     ret = shm_open(file_name, open_flags | O_RDWR, UCT_POSIX_SHM_OPEN_MODE);
     return uct_posix_open_check_result("shm_open", file_name, open_flags, ret,
@@ -253,6 +254,7 @@ static ucs_status_t uct_posix_file_open(const char *dir, uint64_t mmid,
     char file_path[PATH_MAX];
     int ret;
 
+        ucs_trace_func("mm PSX file open");
     ucs_snprintf_safe(file_path, sizeof(file_path), "%s" UCT_POSIX_FILE_FMT,
                       dir, mmid);
     ret = open(file_path, open_flags | O_RDWR, UCT_POSIX_SHM_OPEN_MODE);
@@ -264,6 +266,7 @@ static ucs_status_t uct_posix_procfs_open(int pid, int peer_fd, int* fd_p)
     char file_path[PATH_MAX];
     int ret;
 
+        ucs_trace_func("mm PSX proc open");
     ucs_snprintf_safe(file_path, sizeof(file_path), UCT_POSIX_PROCFS_FILE_FMT,
                       pid, peer_fd);
     ret = open(file_path, O_RDWR, UCT_POSIX_SHM_OPEN_MODE);
@@ -305,6 +308,7 @@ uct_posix_mmap(void **address_p, size_t *length_p, int flags, int fd,
     size_t aligned_length;
     void *result;
 
+    
     aligned_length = ucs_align_up_pow2(*length_p, ucs_get_page_size());
 
 #ifdef MAP_HUGETLB
@@ -326,6 +330,7 @@ uct_posix_mmap(void **address_p, size_t *length_p, int flags, int fd,
     }
 #endif
 
+    ucs_trace_func("mm PSX mmap %"PRIu64, aligned_length);
     result = ucs_mmap(*address_p, aligned_length, UCT_POSIX_MMAP_PROT,
                       MAP_SHARED | flags, fd, 0, alloc_name);
     if (result == MAP_FAILED) {
@@ -374,6 +379,8 @@ uct_posix_mem_attach_common(uct_mm_seg_id_t seg_id, size_t length,
     ucs_assert(length > 0);
     rseg->cookie = (void*)length;
 
+        ucs_trace_func("mm PSX attach");
+        
     if (seg_id & UCT_POSIX_SEG_FLAG_PROCFS) {
         uct_posix_mmid_procfs_unpack(mmid, &pid, &peer_fd);
         status = uct_posix_procfs_open(pid, peer_fd, &fd);
@@ -423,6 +430,8 @@ uct_posix_segment_open(uct_mm_md_t *md, uct_mm_seg_id_t *seg_id_p, int *fd_p)
     uint64_t mmid, flags;
     ucs_status_t status;
     unsigned rand_seed;
+    
+        ucs_trace_func("mm PSX seg open");
 
     /* Generate random 32-bit shared memory id and make sure it's not used
      * already by opening the file with O_CREAT|O_EXCL */
@@ -463,6 +472,8 @@ uct_posix_mem_alloc(uct_md_h tl_md, size_t *length_p, void **address_p,
     void *address;
     int fd;
 
+        ucs_trace_func("mm PSX mem alloc");
+        
     if (mem_type != UCS_MEMORY_TYPE_HOST) {
         return UCS_ERR_UNSUPPORTED;
     }
@@ -573,6 +584,8 @@ static ucs_status_t uct_posix_mem_free(uct_md_h tl_md, uct_mem_h memh)
     ucs_status_t status;
     int fd, dummy_pid;
 
+        ucs_trace_func("mm PSX mem free");
+        
     status = uct_posix_munmap(seg->address, seg->length);
     if (status != UCS_OK) {
         return status;
@@ -661,6 +674,8 @@ UCS_PROFILE_FUNC(ucs_status_t, uct_posix_rkey_unpack,
     const uct_posix_packed_rkey_t *packed_rkey = rkey_buffer;
     uct_mm_remote_seg_t *rseg;
     ucs_status_t status;
+    
+        ucs_trace_func("UCS profile mm PSX");
 
     rseg = ucs_malloc(sizeof(*rseg), "posix_remote_seg");
     if (rseg == NULL) {
@@ -686,6 +701,8 @@ UCS_PROFILE_FUNC(ucs_status_t, uct_posix_rkey_release,(component, rkey, handle),
 {
     uct_mm_remote_seg_t *rseg = handle;
     ucs_status_t status;
+    
+        ucs_trace_func("UCS profile mm PSX");
 
     status = uct_posix_mem_detach_common(rseg);
     if (status != UCS_OK) {

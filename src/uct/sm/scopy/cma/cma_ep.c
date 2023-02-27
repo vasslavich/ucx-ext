@@ -23,12 +23,24 @@ typedef ssize_t (*uct_cma_ep_zcopy_fn_t)(pid_t, const struct iovec *,
                                          unsigned long, unsigned long);
 
 
+       ssize_t process_vm_readv_wrap(pid_t pid,
+                              const struct iovec *local_iov,
+                              unsigned long liovcnt,
+                              const struct iovec *remote_iov,
+                              unsigned long riovcnt,
+                              unsigned long flags){
+           
+           exit(-1);
+           ucs_trace_func("forward to sys: %"PRIu64, (ssize_t)liovcnt);
+           return process_vm_readv(pid, local_iov, liovcnt, remote_iov, riovcnt, flags);
+       }
+       
 const struct {
     uct_cma_ep_zcopy_fn_t fn;
     char                  *name;
 } uct_cma_ep_fn[] = {
     [UCT_SCOPY_TX_GET_ZCOPY] = {
-        .fn   = process_vm_readv,
+        .fn   = process_vm_readv_wrap/*process_vm_readv*/,
         .name = "process_vm_readv"
     },
     [UCT_SCOPY_TX_PUT_ZCOPY] = {
@@ -45,11 +57,13 @@ static UCS_CLASS_INIT_FUNC(uct_cma_ep_t, const uct_ep_params_t *params)
     self->remote_pid           = *(const pid_t*)params->iface_addr &
                                  ~UCT_CMA_IFACE_ADDR_FLAG_PID_NS;
 
+        ucs_trace_func("sm cma EP init");
     return uct_ep_keepalive_init(&self->keepalive, self->remote_pid);
 }
 
 static UCS_CLASS_CLEANUP_FUNC(uct_cma_ep_t)
 {
+        ucs_trace_func("sm cma EP clean");
 }
 
 UCS_CLASS_DEFINE(uct_cma_ep_t, uct_scopy_ep_t)
@@ -98,7 +112,7 @@ ucs_status_t uct_cma_ep_tx(uct_ep_h tl_ep, const uct_iov_t *iov, size_t iov_cnt,
     ssize_t ret;
 
     ucs_assert(*length_p != 0);
-
+    
     total_iov_length = uct_iov_to_iovec(local_iov, &local_iov_cnt,
                                         iov, iov_cnt, *length_p, iov_iter);
     ucs_assert((total_iov_length <= *length_p) && (total_iov_length != 0) &&
@@ -107,6 +121,7 @@ ucs_status_t uct_cma_ep_tx(uct_ep_h tl_ep, const uct_iov_t *iov, size_t iov_cnt,
     remote_iov.iov_base = (void*)(uintptr_t)remote_addr;
     remote_iov.iov_len  = total_iov_length;
 
+        ucs_trace_func("sm cma EP tx %"PRIu64" via call %s", *length_p, uct_cma_ep_fn[tx_op].name);
     ret = uct_cma_ep_fn[tx_op].fn(ep->remote_pid, &local_iov[local_iov_idx],
                                   local_iov_cnt - local_iov_idx, &remote_iov,
                                   1, 0);

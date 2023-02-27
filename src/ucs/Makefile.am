@@ -82,7 +82,8 @@ nobase_dist_libucs_la_HEADERS = \
 	arch/aarch64/global_opts.h \
 	arch/generic/atomic.h \
 	arch/ppc64/global_opts.h \
-	arch/global_opts.h
+	arch/global_opts.h \
+    sisci_utils/sisci_utils.h
 
 noinst_HEADERS = \
 	arch/aarch64/cpu.h \
@@ -197,7 +198,8 @@ libucs_la_SOURCES = \
 	type/spinlock.c \
 	type/thread_mode.c \
 	vfs/base/vfs_obj.c \
-	vfs/base/vfs_cb.c
+	vfs/base/vfs_cb.c \
+    sisci_utils/sisci_utils.c
 
 if HAVE_AARCH64_THUNDERX2
 libucs_la_SOURCES += \

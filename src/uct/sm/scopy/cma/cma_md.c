@@ -142,6 +142,7 @@ uct_cma_query_md_resources(uct_component_t *component,
                            uct_md_resource_desc_t **resources_p,
                            unsigned *num_resources_p)
 {
+        ucs_trace_func("sm cma MD resources");
     if (uct_cma_test_writev() && uct_cma_test_ptrace_scope()) {
         return uct_md_query_single_md_resource(component, resources_p,
                                                num_resources_p);
@@ -159,6 +160,8 @@ static ucs_status_t uct_cma_mem_reg(uct_md_h md, void *address, size_t length,
      * otherwise gtest is not happy */
     UCS_STATIC_ASSERT((uint64_t)0xdeadbeef != (uint64_t)UCT_MEM_HANDLE_NULL);
     *memh_p = (void *) 0xdeadbeef;
+    
+        ucs_trace_func("sm cma mem reg");
     return UCS_OK;
 }
 
@@ -168,13 +171,14 @@ static ucs_status_t uct_cma_mem_dereg(uct_md_h uct_md,
     UCT_MD_MEM_DEREG_CHECK_PARAMS(params, 0);
 
     ucs_assert(params->memh == (void*)0xdeadbeef);
-
+    ucs_trace_func("sm cma mem dereg");
     return UCS_OK;
 }
 
 static void uct_cma_md_close(uct_md_h md)
 {
     ucs_free(md);
+        ucs_trace_func("sm cma MD close x:))");
 }
 
 static ucs_status_t
@@ -197,6 +201,7 @@ uct_cma_md_open(uct_component_t *component, const char *md_name,
     };
     uct_cma_md_t *cma_md;
 
+        ucs_trace_func("sm cma MD open");
     cma_md = ucs_malloc(sizeof(uct_cma_md_t), "uct_cma_md_t");
     if (cma_md == NULL) {
         ucs_error("Failed to allocate memory for uct_cma_md_t");
@@ -228,6 +233,7 @@ ucs_status_t uct_cma_md_query(uct_md_h uct_md, uct_md_attr_v2_t *md_attr)
     md_attr->max_reg          = ULONG_MAX;
     md_attr->reg_cost         = ucs_linear_func_make(9e-9, 0);
 
+        ucs_trace_func("sm cma MD query");
     memset(&md_attr->local_cpus, 0xff, sizeof(md_attr->local_cpus));
     return UCS_OK;
 }

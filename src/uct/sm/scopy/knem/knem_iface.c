@@ -35,6 +35,7 @@ static ucs_status_t uct_knem_iface_query(uct_iface_h tl_iface,
     iface_attr->bandwidth.dedicated = iface->super.super.config.bandwidth;
     iface_attr->bandwidth.shared    = 0;
 
+        ucs_trace_func("sm knem IFace query");
     return UCS_OK;
 }
 
@@ -83,12 +84,14 @@ static UCS_CLASS_INIT_FUNC(uct_knem_iface_t, uct_md_h md, uct_worker_h worker,
                               tl_config);
     self->knem_md = (uct_knem_md_t *)md;
 
+        ucs_trace_func("sm knem IFace init");
     return UCS_OK;
 }
 
 static UCS_CLASS_CLEANUP_FUNC(uct_knem_iface_t)
 {
     /* No OP */
+        ucs_trace_func("sm knem IFace cleanup");
 }
 
 UCS_CLASS_DEFINE(uct_knem_iface_t, uct_scopy_iface_t);

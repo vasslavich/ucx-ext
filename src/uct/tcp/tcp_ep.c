@@ -226,6 +226,7 @@ static UCS_CLASS_INIT_FUNC(uct_tcp_ep_t, uct_tcp_iface_t *iface, int fd,
 {
     UCS_CLASS_CALL_SUPER_INIT(uct_base_ep_t, &iface->super)
 
+    ucs_trace_func("tcp EP init class");
     uct_tcp_ep_ctx_init(&self->tx);
     uct_tcp_ep_ctx_init(&self->rx);
 
@@ -375,6 +376,7 @@ static UCS_CLASS_CLEANUP_FUNC(uct_tcp_ep_t)
     uct_tcp_iface_t *iface = ucs_derived_of(self->super.super.iface,
                                             uct_tcp_iface_t);
 
+    ucs_trace_func("tcp EP cleanup");
     uct_ep_pending_purge(&self->super.super, ucs_empty_function_do_assert_void,
                          NULL);
 
@@ -417,6 +419,8 @@ ucs_status_t uct_tcp_ep_init(uct_tcp_iface_t *iface, int fd,
     ucs_status_t status;
     uct_tcp_ep_t *ep;
 
+    ucs_trace_func("tcp EP init");
+    
     ep = ucs_malloc(sizeof(uct_tcp_ep_t) + iface->config.sockaddr_len,
                     "tcp_ep");
     if (ep == NULL) {
@@ -449,6 +453,7 @@ void uct_tcp_ep_destroy(uct_ep_h tl_ep)
                                             uct_tcp_iface_t);
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP destroy");
     if (/* EPs that are connected as CONNECT_TO_EP have to be full duplex */
         !(ep->flags & UCT_TCP_EP_FLAG_CONNECT_TO_EP) &&
         (ep->conn_state == UCT_TCP_EP_CONN_STATE_CONNECTED) &&
@@ -599,6 +604,7 @@ static ucs_status_t uct_tcp_ep_create_socket_and_connect(uct_tcp_ep_t *ep)
     struct sockaddr *saddr = (struct sockaddr*)ep->peer_addr;
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP create sock + connect");
     status = ucs_socket_create(saddr->sa_family, SOCK_STREAM, &ep->fd);
     if (status != UCS_OK) {
         goto err;
@@ -680,6 +686,7 @@ static ucs_status_t uct_tcp_ep_connect(uct_tcp_ep_t *ep)
     uct_tcp_ep_t *peer_ep  = NULL;
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP connect");
     /* Check that the connection was not issued yet. New connection has to be
      * issue form:
      * - uct_ep_connect_to_ep(), if the EP created using CONNECT_TO_EP method
@@ -969,6 +976,7 @@ static void uct_tcp_ep_handle_disconnected(uct_tcp_ep_t *ep, ucs_status_t status
                                             uct_tcp_iface_t);
 
     ucs_debug("tcp_ep %p: remote disconnected", ep);
+    ucs_trace_func("tcp EP disconnected");
 
     if (ep->flags & UCT_TCP_EP_FLAG_CTX_TYPE_TX) {
         if (ep->flags & UCT_TCP_EP_FLAG_CTX_TYPE_RX) {
@@ -1027,6 +1035,7 @@ static inline ssize_t uct_tcp_ep_send(uct_tcp_ep_t *ep)
     size_t sent_length;
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP send");
     ucs_assert(ep->tx.length > ep->tx.offset);
     sent_length = ep->tx.length - ep->tx.offset;
 
@@ -1050,6 +1059,7 @@ static inline ssize_t uct_tcp_ep_sendv(uct_tcp_ep_t *ep)
     size_t sent_length;
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP sendv");
     ucs_assertv((ep->tx.offset < ep->tx.length) &&
                 (ctx->iov_cnt > 0), "ep=%p", ep);
 
@@ -1204,6 +1214,7 @@ static inline unsigned uct_tcp_ep_recv(uct_tcp_ep_t *ep, size_t recv_length)
                                                          uct_tcp_iface_t);
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP recv");
     if (ucs_unlikely(recv_length == 0)) {
         return 1;
     }
@@ -1282,6 +1293,7 @@ static inline void
 uct_tcp_ep_comp_recv_am(uct_tcp_iface_t *iface, uct_tcp_ep_t *ep,
                         uct_tcp_am_hdr_t *hdr)
 {
+    ucs_trace_func("tcp EP am comp recv");
     uct_iface_trace_am(&iface->super, UCT_AM_TRACE_TYPE_RECV, hdr->am_id,
                        hdr + 1, hdr->length,
                        "RECV: ep %p fd %d received %zu/%zu bytes",
@@ -1323,7 +1335,7 @@ static inline void uct_tcp_ep_handle_put_req(uct_tcp_ep_t *ep,
     ucs_status_t status;
 
     ucs_assert(put_req->addr || !put_req->length);
-
+ucs_trace_func("tcp EP handle put req");
     copied_length  = ucs_min(put_req->length, extra_recvd_length);
     memcpy((void*)(uintptr_t)put_req->addr,
            UCS_PTR_BYTE_OFFSET(ep->rx.buf, ep->rx.offset),
@@ -1471,6 +1483,7 @@ uct_tcp_ep_am_prepare(uct_tcp_iface_t *iface, uct_tcp_ep_t *ep,
 {
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP am prepare");
     status = uct_tcp_ep_check_tx_res(ep);
     if (ucs_unlikely(status != UCS_OK)) {
         if (ucs_likely(status == UCS_ERR_NO_RESOURCE)) {
@@ -1604,6 +1617,7 @@ uct_tcp_ep_set_outstanding_zcopy(uct_tcp_iface_t *iface, uct_tcp_ep_t *ep,
         memcpy(ctx->iov[1].iov_base, header, header_length);
     }
 
+    ucs_trace_func("tcp EP set outstand zcopy");
     ctx->iov_index = 0;
     ucs_iov_advance(ctx->iov, ctx->iov_cnt, &ctx->iov_index, ep->tx.offset);
 }
@@ -1615,6 +1629,7 @@ uct_tcp_ep_am_send(uct_tcp_ep_t *ep, const uct_tcp_am_hdr_t *hdr)
                                                          uct_tcp_iface_t);
     ssize_t offset;
 
+    ucs_trace_func("tcp EP am send");
     uct_tcp_ep_tx_started(ep, hdr);
 
     offset = uct_tcp_ep_send(ep);
@@ -1660,7 +1675,7 @@ uct_tcp_ep_am_sendv(uct_tcp_ep_t *ep, int short_sendv, uct_tcp_am_hdr_t *hdr,
     size_t sent_length;
 
     uct_tcp_ep_tx_started(ep, hdr);
-
+ucs_trace_func("tcp EP am sendv");
     ucs_assertv((ep->tx.length <= send_limit) &&
                 (iov_cnt > 0), "ep=%p", ep);
 
@@ -1702,6 +1717,7 @@ static void uct_tcp_ep_post_put_ack(uct_tcp_ep_t *ep)
     uct_tcp_ep_put_ack_hdr_t *put_ack;
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP post put");
     /* Make sure that we are sending nothing through this EP at the moment.
      * This check is needed to avoid mixing AM/PUT data sent from this EP
      * and this PUT ACK message */
@@ -1738,6 +1754,7 @@ uct_tcp_ep_am_short_sendv(uct_tcp_ep_t *ep, uct_tcp_iface_t *iface,
     ucs_status_t status;
     size_t offset;
 
+    ucs_trace_func("tcp EP am short sendv");
     status = uct_tcp_ep_am_sendv(ep, 1, hdr, iface->config.tx_seg_size, &header, iov,
                                  iov_cnt);
     if (ucs_unlikely(status != UCS_OK)) {
@@ -1767,6 +1784,7 @@ ucs_status_t uct_tcp_ep_am_short(uct_ep_h uct_ep, uint8_t am_id, uint64_t header
     uint32_t UCS_V_UNUSED payload_length;
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP am short");
     UCT_CHECK_LENGTH(length + sizeof(header), 0,
                      iface->config.tx_seg_size - sizeof(uct_tcp_am_hdr_t),
                      "am_short");
@@ -1820,6 +1838,7 @@ ucs_status_t uct_tcp_ep_am_short_iov(uct_ep_h uct_ep, uint8_t am_id,
     size_t UCS_V_UNUSED payload_length;
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP am short iov");
     UCT_CHECK_AM_ID(am_id);
     UCT_CHECK_IOV_SIZE(uct_iov_cnt, iface->config.max_iov, "am_short_iov");
     UCT_CHECK_LENGTH(uct_iov_total_length(uct_iov, uct_iov_cnt), 0,
@@ -1861,7 +1880,7 @@ ssize_t uct_tcp_ep_am_bcopy(uct_ep_h uct_ep, uint8_t am_id,
     ucs_status_t status;
 
     UCT_CHECK_AM_ID(am_id);
-
+ucs_trace_func("tcp EP am bcopy");
     status = uct_tcp_ep_am_prepare(iface, ep, am_id, &hdr);
     if (status != UCS_OK) {
         return status;
@@ -1895,6 +1914,7 @@ uct_tcp_ep_prepare_zcopy(uct_tcp_iface_t *iface, uct_tcp_ep_t *ep, uint8_t am_id
     uct_tcp_ep_zcopy_tx_t *ctx;
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP prepare zcopy");
     UCT_CHECK_IOV_SIZE(iovcnt, iface->config.max_iov, name);
     UCT_CHECK_LENGTH(header_length, 0, iface->config.zcopy.max_hdr, name);
 
@@ -1948,6 +1968,7 @@ ucs_status_t uct_tcp_ep_am_zcopy(uct_ep_h uct_ep, uint8_t am_id, const void *hea
                      "am_zcopy");
     UCT_CHECK_AM_ID(am_id);
 
+    ucs_trace_func("tcp EM am zcopy");
     status = uct_tcp_ep_prepare_zcopy(iface, ep, am_id, header, header_length,
                                       iov, iovcnt, "am_zcopy", &payload_length,
                                       &ctx);
@@ -2010,6 +2031,7 @@ ucs_status_t uct_tcp_ep_put_zcopy(uct_ep_h uct_ep, const uct_iov_t *iov,
     uct_tcp_ep_put_req_hdr_t put_req = {0}; /* Suppress Cppcheck false-positive */
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP put zcopy");
     UCT_CHECK_LENGTH(sizeof(put_req) + uct_iov_total_length(iov, iovcnt), 0,
                      UCT_TCP_EP_PUT_ZCOPY_MAX - sizeof(uct_tcp_am_hdr_t),
                      "put_zcopy");
@@ -2110,6 +2132,7 @@ ucs_status_t uct_tcp_ep_flush(uct_ep_h tl_ep, unsigned flags,
     uct_tcp_ep_t *ep = ucs_derived_of(tl_ep, uct_tcp_ep_t);
     ucs_status_t status;
 
+    ucs_trace_func("tcp EP flush");
     if (ucs_unlikely(flags & UCT_FLUSH_FLAG_CANCEL)) {
         uct_tcp_ep_purge(ep, UCS_ERR_CANCELED);
         return UCS_OK;

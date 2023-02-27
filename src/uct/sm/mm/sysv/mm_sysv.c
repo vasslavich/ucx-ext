@@ -54,6 +54,8 @@ static ucs_status_t uct_sysv_mem_attach_common(int shmid, void **address_p)
 {
     void *address;
 
+        ucs_trace_func("mm SYSV mem attach");
+        
     address = shmat(shmid, NULL, 0);
     if (address == MAP_FAILED) {
         ucs_error("shmat(shmid=%d) failed: %m", shmid);
@@ -76,6 +78,8 @@ uct_sysv_mem_alloc(uct_md_h tl_md, size_t *length_p, void **address_p,
     uct_mm_seg_t *seg;
     int shmid;
 
+        ucs_trace_func("mm SYSV mem alloc");
+        
     if (mem_type != UCS_MEMORY_TYPE_HOST) {
         return UCS_ERR_UNSUPPORTED;
     }
@@ -128,6 +132,8 @@ static ucs_status_t uct_sysv_mem_free(uct_md_h tl_md, uct_mem_h memh)
     uct_mm_seg_t *seg = memh;
     ucs_status_t status;
 
+        ucs_trace_func("mm SYSV mem free");
+        
     status = ucs_sysv_free(seg->address);
     if (status != UCS_OK) {
         return status;
@@ -177,6 +183,8 @@ UCS_PROFILE_FUNC(ucs_status_t, uct_sysv_rkey_unpack,
     ucs_status_t status;
     void *address;
 
+        ucs_trace_func("UCS profile mm SYSV");
+        
     status = uct_sysv_mem_attach_common(packed_rkey->shmid, &address);
     if (status != UCS_OK) {
         return status;

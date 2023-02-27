@@ -79,6 +79,8 @@ static ucs_status_t uct_mm_iface_get_address(uct_iface_t *tl_iface,
     uct_mm_seg_t        *seg        = iface->recv_fifo_mem.memh;
 
     iface_addr->fifo_seg_id = seg->seg_id;
+    
+        ucs_trace_func("mm IFace get addr");
     return uct_mm_md_mapper_ops(md)->iface_addr_pack(md, iface_addr + 1);
 }
 
@@ -90,6 +92,7 @@ uct_mm_iface_query_tl_devices(uct_md_h md,
     uct_md_attr_t md_attr;
     ucs_status_t status;
 
+        ucs_trace_func("mm IFace query devices");
     status = uct_md_query(md, &md_attr);
     if (status != UCS_OK) {
         return status;
@@ -150,6 +153,7 @@ static ucs_status_t uct_mm_iface_query(uct_iface_h tl_iface,
     int attach_shm_file;
     ucs_status_t status;
 
+        ucs_trace_func("mm IFace query");
     uct_base_iface_query(&iface->super.super, iface_attr);
 
     /* default values for all shared memory transports */
@@ -252,6 +256,7 @@ uct_mm_assign_desc_to_fifo_elem(uct_mm_iface_t *iface,
 {
     uct_mm_recv_desc_t *desc;
 
+        ucs_trace_func("mm IFace assign elem");
     if (!need_new_desc) {
         desc = iface->last_recv_desc;
     } else {
@@ -269,6 +274,8 @@ static UCS_F_ALWAYS_INLINE void uct_mm_iface_process_recv(uct_mm_iface_t *iface)
     uct_mm_fifo_element_t *elem = iface->read_index_elem;
     ucs_status_t status;
     void *data;
+    
+        ucs_trace_func("mm IFace recv");
 
     if (ucs_likely(elem->flags & UCT_MM_FIFO_ELEM_FLAG_INLINE)) {
         /* read short (inline) messages from the FIFO elements */
@@ -314,6 +321,8 @@ uct_mm_iface_fifo_has_new_data(uct_mm_iface_t *iface)
 static UCS_F_ALWAYS_INLINE unsigned
 uct_mm_iface_poll_fifo(uct_mm_iface_t *iface)
 {
+        ucs_trace_func("mm IFace poll fifo");
+        
     if (!uct_mm_iface_fifo_has_new_data(iface)) {
         return 0;
     }
@@ -512,6 +521,7 @@ uct_mm_estimate_perf(uct_iface_h tl_iface, uct_perf_attr_t *perf_attr)
                                            OPERATION, UCT_EP_OP_LAST);
     double short_overhead, am_overhead;
 
+        ucs_trace_func("mm IFace estimate perf");
     if (perf_attr->field_mask & UCT_PERF_ATTR_FIELD_BANDWIDTH) {
         perf_attr->bandwidth.shared = 0;
         perf_attr->bandwidth.dedicated = iface->super.config.bandwidth;
@@ -587,6 +597,7 @@ static void uct_mm_iface_recv_desc_init(uct_iface_h tl_iface, void *obj,
     uct_mm_seg_t        *seg  = memh;
     size_t offset;
 
+        ucs_trace_func("mm IFace des init");
     if (seg->length > UINT_MAX) {
         ucs_error("mm: shared memory segment length cannot exceed %u", UINT_MAX);
         desc->info.seg_id   = UINT64_MAX;
@@ -647,6 +658,8 @@ static ucs_status_t uct_mm_iface_create_signal_fd(uct_mm_iface_t *iface)
     socklen_t addrlen;
     struct sockaddr_un bind_addr;
     int ret;
+    
+        ucs_trace_func("mm IFace create signal");
 
     /* Create a UNIX domain socket to send and receive wakeup signal from remote processes */
     iface->signal_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
@@ -716,6 +729,7 @@ static UCS_CLASS_INIT_FUNC(uct_mm_iface_t, uct_md_h md, uct_worker_h worker,
     ucs_status_t status;
     unsigned i;
 
+        ucs_trace_func("mm IFace init");
     UCS_CLASS_CALL_SUPER_INIT(uct_sm_iface_t, &uct_mm_iface_ops,
                               &uct_mm_iface_internal_ops, md, worker, params,
                               tl_config);
@@ -859,6 +873,7 @@ err:
 
 static UCS_CLASS_CLEANUP_FUNC(uct_mm_iface_t)
 {
+        ucs_trace_func("mm IFace cleanup");
     uct_base_iface_progress_disable(&self->super.super.super,
                                     UCT_PROGRESS_SEND | UCT_PROGRESS_RECV);
 

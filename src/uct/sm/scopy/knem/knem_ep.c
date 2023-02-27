@@ -26,13 +26,14 @@ const char *uct_knem_ep_tx_op_str[] = {
 static UCS_CLASS_INIT_FUNC(uct_knem_ep_t, const uct_ep_params_t *params)
 {
     UCS_CLASS_CALL_SUPER_INIT(uct_scopy_ep_t, params);
-
+    ucs_trace_func("sm knem EP init");
     return UCS_OK;
 }
 
 static UCS_CLASS_CLEANUP_FUNC(uct_knem_ep_t)
 {
     /* No op */
+        ucs_trace_func("sm knem EP cleanup");
 }
 
 UCS_CLASS_DEFINE(uct_knem_ep_t, uct_scopy_ep_t)
@@ -67,7 +68,7 @@ ucs_status_t uct_knem_ep_tx(uct_ep_h tl_ep, const uct_iov_t *iov, size_t iov_cnt
     int i, ret;
 
     ucs_assert(*length_p != 0);
-
+    ucs_trace_func("sm knem EP tx %"PRIu64, *length_p);
     total_iov_length = ucs_iov_converter(local_iov, &local_iov_cnt,
                                          uct_knem_iovec_set_buffer, uct_knem_iovec_set_length,
                                          iov, iov_cnt,

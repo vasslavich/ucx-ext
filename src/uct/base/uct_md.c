@@ -124,7 +124,10 @@ ucs_status_t uct_md_query_tl_resources(uct_md_h md,
     resources     = NULL;
     num_resources = 0;
 
+    SRR_UCX_LOG_PRINT("");
+        
     ucs_list_for_each(tl, &component->tl_list, list) {
+            ucs_trace_data("check for %s", tl->name);
         status = tl->query_devices(md, &tl_devices, &num_tl_devices);
         if (status != UCS_OK) {
             ucs_debug("failed to query %s resources: %s", tl->name,
@@ -187,6 +190,9 @@ uct_md_query_single_md_resource(uct_component_t *component,
         return UCS_ERR_NO_MEMORY;
     }
 
+    ucs_trace_func("alloc resources for md %s/%s,  %"PRIu64" bytes",
+                   component->name, resource->md_name, sizeof(*resource));
+    
     ucs_snprintf_zero(resource->md_name, UCT_MD_NAME_MAX, "%s",
                       component->name);
 

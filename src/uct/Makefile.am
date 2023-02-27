@@ -43,7 +43,10 @@ noinst_HEADERS = \
 	tcp/tcp.h \
 	tcp/tcp_sockcm.h \
 	tcp/tcp_listener.h \
-	tcp/tcp_sockcm_ep.h
+	tcp/tcp_sockcm_ep.h \
+    sisci/sisci_ep.h \
+    sisci/sisci_iface.h \
+    sisci/sisci_types.h
 
 
 libuct_la_SOURCES = \
@@ -75,7 +78,10 @@ libuct_la_SOURCES = \
 	tcp/tcp_base.c \
 	tcp/tcp_sockcm.c \
 	tcp/tcp_listener.c \
-	tcp/tcp_sockcm_ep.c
+	tcp/tcp_sockcm_ep.c \
+    sisci/sisci_ep.c \
+    sisci/sisci_iface.c \
+    sisci/sisci_types.c
 
 PKG_CONFIG_NAME=uct
 

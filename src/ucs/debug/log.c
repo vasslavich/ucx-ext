@@ -593,3 +593,12 @@ void ucs_log_set_thread_name(const char *format, ...)
     vsnprintf(ucs_log_thread_name, sizeof(ucs_log_thread_name) - 1, format, ap);
     va_end(ap);
 }
+
+void* p_OMPI_LOG_DATA = NULL;
+int UCX_TRACE_ON = 1;
+int UCX_DBG_BREAK = 0;
+void ucx_segfault(){
+    if(UCX_DBG_BREAK){
+    *((int*)p_OMPI_LOG_DATA) = 1;
+    }
+}

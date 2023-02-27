@@ -401,6 +401,7 @@ ucs_status_t uct_single_device_resource(uct_md_h md, const char *dev_name,
 {
     uct_tl_device_resource_t *device;
 
+    ucs_trace_data("uct_single_device_resource");
     device = ucs_calloc(1, sizeof(*device), "device resource");
     if (NULL == device) {
         ucs_error("failed to allocate device resource");
@@ -413,6 +414,9 @@ ucs_status_t uct_single_device_resource(uct_md_h md, const char *dev_name,
 
     *num_tl_devices_p = 1;
     *tl_devices_p     = device;
+    
+    //UCX_SEGFAULT;
+    
     return UCS_OK;
 }
 

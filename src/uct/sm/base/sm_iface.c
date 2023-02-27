@@ -85,6 +85,8 @@ UCS_CLASS_INIT_FUNC(uct_sm_iface_t, uct_iface_ops_t *ops,
     uct_sm_iface_config_t *sm_config = ucs_derived_of(tl_config,
                                                       uct_sm_iface_config_t);
 
+    ucs_trace_func("sm IFace init");
+    
     UCT_CHECK_PARAM(params->field_mask & UCT_IFACE_PARAM_FIELD_OPEN_MODE,
                     "UCT_IFACE_PARAM_FIELD_OPEN_MODE is not defined");
     if (!(params->open_mode & UCT_IFACE_OPEN_MODE_DEVICE)) {
@@ -106,6 +108,7 @@ UCS_CLASS_INIT_FUNC(uct_sm_iface_t, uct_iface_ops_t *ops,
 
 static UCS_CLASS_CLEANUP_FUNC(uct_sm_iface_t)
 {
+        ucs_trace_func("sm IFace cleanup");
 }
 
 UCS_CLASS_DEFINE(uct_sm_iface_t, uct_base_iface_t);

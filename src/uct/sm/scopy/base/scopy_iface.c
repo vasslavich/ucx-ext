@@ -56,6 +56,7 @@ static ucs_mpool_ops_t uct_scopy_mpool_ops = {
 
 void uct_scopy_iface_query(uct_scopy_iface_t *iface, uct_iface_attr_t *iface_attr)
 {
+        ucs_trace_func("sm scopy IFace query");
     uct_base_iface_query(&iface->super.super, iface_attr);
 
     /* default values for all shared memory transports */
@@ -98,6 +99,7 @@ UCS_CLASS_INIT_FUNC(uct_scopy_iface_t, uct_iface_ops_t *ops,
     ucs_status_t status;
     ucs_mpool_params_t mp_params;
 
+        ucs_trace_func("sm scopy IFace init");
     UCS_CLASS_CALL_SUPER_INIT(uct_sm_iface_t, ops, &scopy_ops->super, md,
                               worker, params, tl_config);
 
@@ -123,6 +125,7 @@ UCS_CLASS_INIT_FUNC(uct_scopy_iface_t, uct_iface_ops_t *ops,
 
 static UCS_CLASS_CLEANUP_FUNC(uct_scopy_iface_t)
 {
+        ucs_trace_func("sm scopy IFace cleanup");
     uct_worker_progress_unregister_safe(&self->super.super.worker->super,
                                         &self->super.super.prog.id);
     ucs_mpool_cleanup(&self->tx_mpool, 1);

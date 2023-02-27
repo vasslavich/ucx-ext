@@ -66,7 +66,8 @@ static ucs_status_t uct_self_iface_query(uct_iface_h tl_iface, uct_iface_attr_t 
     uct_self_iface_t *iface = ucs_derived_of(tl_iface, uct_self_iface_t);
 
     ucs_trace_func("iface=%p", iface);
-
+    
+ucs_trace_func("self IFace query");
     uct_base_iface_query(&iface->super, attr);
 
     attr->iface_addr_len         = sizeof(uct_self_iface_addr_t);
@@ -159,6 +160,7 @@ static void uct_self_iface_sendrecv_am(uct_self_iface_t *iface, uint8_t am_id,
     uct_iface_trace_am(&iface->super, UCT_AM_TRACE_TYPE_RECV, am_id,
                        buffer, length, "RX: AM_%s", title);
 
+    ucs_trace_func("self IFace am sendrecv");
     status = uct_iface_invoke_am(&iface->super, am_id, buffer,
                                  length, 0);
     ucs_assert(status == UCS_OK);
@@ -301,6 +303,7 @@ ucs_status_t uct_self_ep_am_short(uct_ep_h tl_ep, uint8_t id, uint64_t header,
 
     UCT_CHECK_AM_ID(id);
 
+    ucs_trace_func("self EP am short %u", length);
     total_length = length + sizeof(header);
     UCT_CHECK_LENGTH(total_length, 0, iface->send_size, "am_short");
 
@@ -323,6 +326,7 @@ ucs_status_t uct_self_ep_am_short_iov(uct_ep_h tl_ep, uint8_t id,
     size_t length;
 
     UCT_CHECK_AM_ID(id);
+    ucs_trace_func("self EP am short iov");
     UCT_CHECK_LENGTH(uct_iov_total_length(iov, iovcnt), 0, iface->send_size,
                      "am_short_iov");
 
@@ -351,6 +355,7 @@ ssize_t uct_self_ep_am_bcopy(uct_ep_h tl_ep, uint8_t id,
     send_buffer = UCT_SELF_IFACE_SEND_BUFFER_GET(iface);
     length = pack_cb(send_buffer, arg);
 
+    ucs_trace_func("self EP am bcopy %"PRIu64, length);
     UCT_CHECK_LENGTH(length, 0, iface->send_size, "am_bcopy");
     UCT_TL_EP_STAT_OP(&ep->super, AM, BCOPY, length);
 

@@ -22,6 +22,7 @@ UCS_CLASS_INIT_FUNC(uct_scopy_ep_t, const uct_ep_params_t *params)
 {
     uct_scopy_iface_t *iface = ucs_derived_of(params->iface, uct_scopy_iface_t);
 
+        ucs_trace_func("sm scopy EP init");
     UCS_CLASS_CALL_SUPER_INIT(uct_base_ep_t, &iface->super.super);
 
     ucs_arbiter_group_init(&self->arb_group);
@@ -31,6 +32,7 @@ UCS_CLASS_INIT_FUNC(uct_scopy_ep_t, const uct_ep_params_t *params)
 
 static UCS_CLASS_CLEANUP_FUNC(uct_scopy_ep_t)
 {
+        ucs_trace_func("sm scopy EP cleanup");
     ucs_arbiter_group_cleanup(&self->arb_group);
 }
 
@@ -59,6 +61,7 @@ uct_scopy_ep_tx_init(uct_ep_h tl_ep, const uct_iov_t *iov,
     ucs_assert((tx_op == UCT_SCOPY_TX_PUT_ZCOPY) ||
                (tx_op == UCT_SCOPY_TX_GET_ZCOPY));
 
+        ucs_trace_func("sm scopy EP tx init");
     UCT_CHECK_IOV_SIZE(iov_cnt, iface->config.max_iov, uct_scopy_tx_op_str[tx_op]);
 
     tx = ucs_mpool_get_inline(&iface->tx_mpool);
@@ -113,6 +116,7 @@ ucs_status_t uct_scopy_ep_put_zcopy(uct_ep_h tl_ep, const uct_iov_t *iov,
                                     size_t iov_cnt, uint64_t remote_addr,
                                     uct_rkey_t rkey, uct_completion_t *comp)
 {
+        ucs_trace_func("sm scopy EP put zcopy");
     return uct_scopy_ep_tx_init(tl_ep, iov, iov_cnt, remote_addr,
                                 rkey, comp, UCT_SCOPY_TX_PUT_ZCOPY);
 }
@@ -121,6 +125,7 @@ ucs_status_t uct_scopy_ep_get_zcopy(uct_ep_h tl_ep, const uct_iov_t *iov,
                                     size_t iov_cnt, uint64_t remote_addr,
                                     uct_rkey_t rkey, uct_completion_t *comp)
 {
+        ucs_trace_func("sm scopy EP get zcopy");
     return uct_scopy_ep_tx_init(tl_ep, iov, iov_cnt, remote_addr,
                                 rkey, comp, UCT_SCOPY_TX_GET_ZCOPY);
 }

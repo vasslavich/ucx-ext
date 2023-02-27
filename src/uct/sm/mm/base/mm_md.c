@@ -14,7 +14,7 @@
 #include <ucs/debug/log.h>
 #include <inttypes.h>
 #include <limits.h>
-
+#include <ucs/sisci_utils/sisci_utils.h>
 
 ucs_config_field_t uct_mm_md_config_table[] = {
   {"", "", NULL,
@@ -37,8 +37,11 @@ ucs_status_t uct_mm_query_md_resources(uct_component_t *component,
 {
     ucs_status_t status;
     int UCS_V_UNUSED attach_shm_file;
-
     status = uct_mm_mdc_mapper_ops(component)->query(&attach_shm_file);
+    
+    UCP_SISCI_PRINT("call md resources");
+    ucs_trace_func("component %p with tl's", component);
+    
     switch (status) {
     case UCS_OK:
         return uct_md_query_single_md_resource(component, resources_p,
@@ -54,6 +57,7 @@ ucs_status_t uct_mm_seg_new(void *address, size_t length, uct_mm_seg_t **seg_p)
 {
     uct_mm_seg_t *seg;
 
+        ucs_trace_func("mm MD seg new");
     seg = ucs_malloc(sizeof(*seg), "mm_seg");
     if (seg == NULL) {
         ucs_error("failed to allocate mm segment");
@@ -78,6 +82,7 @@ void uct_mm_md_query(uct_md_h md, uct_md_attr_v2_t *md_attr, uint64_t max_alloc)
     md_attr->detect_mem_types = 0;
     md_attr->dmabuf_mem_types = 0;
 
+        ucs_trace_func("mm MD query");
     if (max_alloc > 0) {
         md_attr->flags    |= UCT_MD_FLAG_ALLOC | UCT_MD_FLAG_FIXED;
         md_attr->max_alloc = max_alloc;
@@ -93,6 +98,7 @@ ucs_status_t uct_mm_md_open(uct_component_t *component, const char *md_name,
     ucs_status_t status;
     uct_mm_md_t *md;
 
+        ucs_trace_func("mm MD open");
     md = ucs_malloc(sizeof(*md), "uct_mm_md_t");
     if (md == NULL) {
         ucs_error("Failed to allocate memory for uct_mm_md_t");
@@ -134,6 +140,7 @@ void uct_mm_md_close(uct_md_h md)
 {
     uct_mm_md_t *mm_md = ucs_derived_of(md, uct_mm_md_t);
 
+        ucs_trace_func("mm MD close");
     ucs_config_parser_release_opts(mm_md->config,
                                    md->component->md_config.table);
     ucs_free(mm_md->config);

@@ -462,6 +462,8 @@ static ucs_status_t uct_tcp_iface_server_init(uct_tcp_iface_t *iface)
     ucs_status_t status;
     size_t addr_len;
     int port, retry;
+    
+    ucs_trace_func("component TCP IFace server init");
 
     /* retry is 1 for a range of ports or when port value is zero.
      * retry is 0 for a single value port that is not zero */
@@ -504,6 +506,8 @@ static ucs_status_t uct_tcp_iface_listener_init(uct_tcp_iface_t *iface)
     uint16_t port;
     int ret;
 
+    ucs_trace_func("component TCP IFace listener init");
+    
     status = uct_tcp_iface_server_init(iface);
     if (status != UCS_OK) {
         goto err;
@@ -576,6 +580,8 @@ static UCS_CLASS_INIT_FUNC(uct_tcp_iface_t, uct_md_h md, uct_worker_h worker,
     ucs_status_t status;
     int i;
     ucs_mpool_params_t mp_params;
+    
+    ucs_trace_func("component TCP IFace init");
 
     UCT_CHECK_PARAM(params->field_mask & UCT_IFACE_PARAM_FIELD_OPEN_MODE,
                     "UCT_IFACE_PARAM_FIELD_OPEN_MODE is not defined");
@@ -791,6 +797,7 @@ static UCS_CLASS_CLEANUP_FUNC(uct_tcp_iface_t)
 {
     ucs_status_t status;
 
+    ucs_trace_func("component TCP IFace cleanup");
     ucs_debug("tcp_iface %p: destroying", self);
 
     uct_base_iface_progress_disable(&self->super.super,
@@ -834,6 +841,8 @@ ucs_status_t uct_tcp_query_devices(uct_md_h md,
     char path_buffer[PATH_MAX], dev_path[PATH_MAX];
     ucs_sys_device_t sys_dev;
 
+    ucs_trace_func("component TCP query devices");
+    
     dir = opendir(UCT_TCP_IFACE_NETDEV_DIR);
     if (dir == NULL) {
         ucs_error("opendir(%s) failed: %m", UCT_TCP_IFACE_NETDEV_DIR);

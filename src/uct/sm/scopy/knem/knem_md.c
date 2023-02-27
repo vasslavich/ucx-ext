@@ -45,6 +45,7 @@ uct_knem_query_md_resources(uct_component_t *component,
     int rc;
     struct knem_cmd_info info;
 
+        ucs_trace_func("sm knem MD resources");
     memset(&info, 0, sizeof(struct knem_cmd_info));
 
     fd = open("/dev/knem", O_RDWR);
@@ -84,6 +85,7 @@ static void uct_knem_md_close(uct_md_h md)
     }
     close(knem_md->knem_fd);
     ucs_free(knem_md);
+        ucs_trace_func("sm knem MD close");
 }
 
 static ucs_status_t uct_knem_mem_reg_internal(uct_md_h md, void *address, size_t length,
@@ -134,6 +136,7 @@ static ucs_status_t uct_knem_mem_reg(uct_md_h md, void *address, size_t length,
     uct_knem_key_t *key;
     ucs_status_t status;
 
+        ucs_trace_func("sm knem mem reg");
     key = ucs_malloc(sizeof(uct_knem_key_t), "uct_knem_key_t");
     if (NULL == key) {
         ucs_error("Failed to allocate memory for uct_knem_key_t");
@@ -158,6 +161,8 @@ static void uct_knem_mem_dereg_internal(uct_md_h md, uct_knem_key_t *key)
     ucs_assert_always(knem_fd > -1);
     ucs_assert_always(key->cookie  != 0);
     ucs_assert_always(key->address != 0);
+    
+        ucs_trace_func("sm knem dereg internal");
 
     rc = ioctl(knem_fd, KNEM_CMD_DESTROY_REGION, &key->cookie);
     if (rc < 0) {
@@ -174,6 +179,8 @@ static ucs_status_t uct_knem_mem_dereg(uct_md_h md,
 
     key = (uct_knem_key_t*)params->memh;
     uct_knem_mem_dereg_internal(md, key);
+    
+        ucs_trace_func("sm knem mem dereg");
     ucs_free(key);
 
     return UCS_OK;
@@ -214,6 +221,7 @@ ucs_status_t uct_knem_md_query(uct_md_h uct_md, uct_md_attr_v2_t *md_attr)
     md_attr->max_reg          = ULONG_MAX;
     md_attr->reg_cost         = md->reg_cost;
 
+        ucs_trace_func("sm knem MD query");
     memset(&md_attr->local_cpus, 0xff, sizeof(md_attr->local_cpus));
     return UCS_OK;
 }
@@ -376,6 +384,7 @@ uct_knem_md_open(uct_component_t *component, const char *md_name,
     ucs_rcache_params_t rcache_params;
     ucs_status_t status;
 
+        ucs_trace_func("sm knem MD open");
     knem_md = ucs_malloc(sizeof(uct_knem_md_t), "uct_knem_md_t");
     if (NULL == knem_md) {
         ucs_error("Failed to allocate memory for uct_knem_md_t");

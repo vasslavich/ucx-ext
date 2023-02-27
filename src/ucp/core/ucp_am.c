@@ -295,6 +295,7 @@ out:
 static UCS_F_ALWAYS_INLINE int ucp_am_recv_check_id(ucp_worker_h worker,
                                                     uint16_t am_id)
 {
+    ucs_trace_func("ucp check id");
     if (ucs_unlikely((am_id >= ucs_array_length(&worker->am.cbs)) ||
                      (ucs_array_elem(&worker->am.cbs, am_id).cb == NULL))) {
         ucs_warn("UCP Active Message was received with id : %u, but there"
@@ -385,6 +386,7 @@ ucs_status_t ucp_worker_set_am_recv_handler(ucp_worker_h worker,
     uint16_t id;
     unsigned flags;
 
+    ucs_trace_func("ucp set am recv");
     if (!ucs_test_all_flags(param->field_mask, UCP_AM_HANDLER_PARAM_FIELD_ID |
                                                UCP_AM_HANDLER_PARAM_FIELD_CB)) {
         return UCS_ERR_INVALID_PARAM;
@@ -419,6 +421,7 @@ ucp_am_bcopy_pack_data(void *buffer, ucp_request_t *req, size_t length)
     size_t payload_length       = length - user_header_length;
     void *user_hdr;
 
+    ucs_trace_func("ucp am bcopy");
     ucs_assertv((req->send.length == 0) || (length > user_header_length),
                 "length %zu, user_header length %u", length,
                 user_header_length);
@@ -444,6 +447,7 @@ ucp_am_bcopy_pack_args_single(void *dest, void *arg)
     size_t length;
 
     ucs_assert(req->send.state.dt.offset == 0);
+ucs_trace_func("ucp am bcopy args single");
 
     ucp_am_fill_header(hdr, req);
 
@@ -463,6 +467,7 @@ ucp_am_bcopy_pack_args_single_reply(void *dest, void *arg)
     ucp_am_reply_ftr_t *ftr;
     size_t length;
 
+    ucs_trace_func("ucp am bcopy args single rep");
     ucs_assert(req->send.state.dt.offset == 0);
 
     ucp_am_fill_header(hdr, req);
@@ -487,6 +492,7 @@ ucp_am_bcopy_pack_args_first(void *dest, void *arg)
 
     ucs_assert(req->send.state.dt.offset == 0);
 
+    ucs_trace_func("ucp am bcopy first");
     ucp_am_fill_header(hdr, req);
 
     max_length = ucs_min(ucp_am_send_req_total_size(req),
@@ -538,6 +544,7 @@ ucp_am_send_short(ucp_ep_h ep, uint16_t id, uint16_t flags, const void *header,
     ucp_am_reply_ftr_t ftr;
     ucs_status_t status;
 
+    ucs_trace_func("ucp am send short");
     ucp_am_fill_short_header(&am_hdr, id, flags, header_length);
 
     ucp_add_uct_iov_elem(iov, &am_hdr, sizeof(am_hdr), UCT_MEM_HANDLE_NULL,
@@ -573,6 +580,7 @@ static ucs_status_t ucp_am_contig_short(uct_pending_req_t *self)
     ucp_ep_t *ep       = req->send.ep;
     ucs_status_t status;
 
+    ucs_trace_func("ucp am contig short");
     req->send.lane = ucp_ep_get_am_lane(ep);
     status         = ucp_am_send_short(ep, req->send.msg_proto.am.am_id,
                                        req->send.msg_proto.am.flags,
@@ -589,6 +597,7 @@ static ucs_status_t ucp_am_contig_short_reply(uct_pending_req_t *self)
     ucp_ep_t *ep       = req->send.ep;
     ucs_status_t status;
 
+    ucs_trace_func("ucp am contg short rep");
     req->send.lane = ucp_ep_get_am_lane(ep);
     status         = ucp_am_send_short(ep, req->send.msg_proto.am.am_id,
                                        req->send.msg_proto.am.flags,
@@ -604,6 +613,7 @@ static ucs_status_t ucp_am_bcopy_single(uct_pending_req_t *self)
     ucp_request_t *req = ucs_container_of(self, ucp_request_t, send.uct);
     ucs_status_t status;
 
+    ucs_trace_func("ucp am bcopy single");
     status = ucp_do_am_bcopy_single(self, UCP_AM_ID_AM_SINGLE,
                                     ucp_am_bcopy_pack_args_single);
     status = ucp_am_handle_user_header_send_status(req, status);
@@ -615,6 +625,7 @@ static ucs_status_t ucp_am_bcopy_single_reply(uct_pending_req_t *self)
     ucp_request_t *req = ucs_container_of(self, ucp_request_t, send.uct);
     ucs_status_t status;
 
+    ucs_trace_func("ucp am bcopy single rep");
     status = ucp_do_am_bcopy_single(self, UCP_AM_ID_AM_SINGLE_REPLY,
                                     ucp_am_bcopy_pack_args_single_reply);
     status = ucp_am_handle_user_header_send_status(req, status);
@@ -623,17 +634,21 @@ static ucs_status_t ucp_am_bcopy_single_reply(uct_pending_req_t *self)
 
 static ucs_status_t ucp_am_bcopy_multi(uct_pending_req_t *self)
 {
+
     ucs_status_t status = ucp_do_am_bcopy_multi(self, UCP_AM_ID_AM_FIRST,
                                                 UCP_AM_ID_AM_MIDDLE,
                                                 ucp_am_bcopy_pack_args_first,
                                                 ucp_am_bcopy_pack_args_mid, 1,
                                                 1);
+    
+        ucs_trace_func("");
     return ucp_am_bcopy_handle_status_from_pending(self, 1, 0, status);
 }
 
 static UCS_F_ALWAYS_INLINE void ucp_am_zcopy_complete_common(ucp_request_t *req)
 {
     ucs_assert(req->send.state.uct_comp.count == 0);
+    ucs_trace_func("");
 
     ucs_mpool_put_inline(req->send.msg_proto.am.header.reg_desc);
     ucp_request_send_buffer_dereg(req); /* TODO register+lane change */
@@ -641,6 +656,7 @@ static UCS_F_ALWAYS_INLINE void ucp_am_zcopy_complete_common(ucp_request_t *req)
 
 static void ucp_am_zcopy_req_complete(ucp_request_t *req, ucs_status_t status)
 {
+    ucs_trace_func("");
     ucp_am_zcopy_complete_common(req);
     ucp_request_complete_send(req, status);
 }
@@ -651,6 +667,8 @@ static void ucp_am_zcopy_completion(uct_completion_t *self)
                                            send.state.uct_comp);
 
     ucp_am_release_user_header(req);
+    ucs_trace_func("");
+    
     if (req->send.state.dt.offset == req->send.length) {
         ucp_am_zcopy_req_complete(req, self->status);
     } else if (self->status != UCS_OK) {
@@ -676,6 +694,7 @@ static ucs_status_t ucp_am_zcopy_single(uct_pending_req_t *self)
     ucp_request_t *req = ucs_container_of(self, ucp_request_t, send.uct);
     ucp_am_hdr_t hdr;
 
+    ucs_trace_func("");
     ucp_am_fill_header(&hdr, req);
 
     return ucp_do_am_zcopy_single(self, UCP_AM_ID_AM_SINGLE, &hdr, sizeof(hdr),
@@ -690,6 +709,7 @@ static ucs_status_t ucp_am_zcopy_single_reply(uct_pending_req_t *self)
     ucp_am_hdr_t hdr;
     ucp_am_reply_ftr_t *ftr;
 
+    ucs_trace_func("");
     ucp_am_fill_header(&hdr, req);
     ucs_assert(req->send.msg_proto.am.header.reg_desc != NULL);
 
@@ -713,6 +733,8 @@ static ucs_status_t ucp_am_zcopy_multi(uct_pending_req_t *self)
     ucp_am_mid_hdr_t mid_hdr;
     ucp_am_first_ftr_t *first_ftr;
 
+    ucs_trace_func("");
+    
     /* This footer is also used for middle fragments, because it contains
      * common persistent request info (ep id and msg id)
      */
@@ -748,6 +770,8 @@ static size_t ucp_am_rndv_rts_pack(void *dest, void *arg)
     size_t hdr_size             = sreq->send.msg_proto.am.header.length;
     size_t rts_size, total_size;
 
+    ucs_trace_func("");
+    
     ucp_am_fill_header(ucp_am_hdr_from_rts(rts_hdr), sreq);
     rts_size = ucp_rndv_rts_pack(sreq, rts_hdr, UCP_RNDV_RTS_AM);
 
@@ -771,6 +795,8 @@ UCS_PROFILE_FUNC(ucs_status_t, ucp_proto_progress_am_rndv_rts, (self),
     ucp_request_t *sreq = ucs_container_of(self, ucp_request_t, send.uct);
     ucs_status_t status;
 
+    ucs_trace_func("");
+    
     /* RTS consists of: AM RTS header, packed rkeys and user header */
     status = ucp_rndv_send_rts(sreq, ucp_am_rndv_rts_pack,
                                sizeof(ucp_rndv_rts_hdr_t) +
@@ -782,6 +808,8 @@ UCS_PROFILE_FUNC(ucs_status_t, ucp_proto_progress_am_rndv_rts, (self),
 static ucs_status_t
 ucp_am_send_start_rndv(ucp_request_t *sreq, const ucp_request_param_t *param)
 {
+    ucs_trace_func("");
+    
     ucp_trace_req(sreq, "AM start_rndv to %s buffer %p length %zu",
                   ucp_ep_peer_name(sreq->send.ep), sreq->send.buffer,
                   sreq->send.length);
@@ -814,6 +842,8 @@ static void ucp_am_send_req_init(ucp_request_t *req, ucp_ep_h ep,
     req->send.lane                         = ep->am_lane;
     req->send.pending_lane                 = UCP_NULL_LANE;
 
+    ucs_trace_func("");
+    
     ucp_request_send_state_init(req, datatype, count);
     req->send.length   = ucp_dt_length(req->send.datatype, count,
                                        req->send.buffer, &req->send.state.dt);
@@ -829,6 +859,7 @@ ucp_am_rndv_thresh(ucp_request_t *req, const ucp_request_param_t *param,
 {
     size_t rndv_rma_thresh, rndv_am_thresh;
 
+    ucs_trace_func("");
     if (flags & UCP_AM_SEND_FLAG_EAGER) {
         return SIZE_MAX;
     } else if (flags & UCP_AM_SEND_FLAG_RNDV) {
@@ -856,6 +887,7 @@ ucp_am_send_req(ucp_request_t *req, size_t count,
     size_t zcopy_thresh;
     ucs_status_t status;
 
+    ucs_trace_func("");
     max_short   = ucp_am_get_short_max(req, max_short);
     rndv_thresh = ucp_am_rndv_thresh(req, param, ep_config, flags, &max_short);
 
@@ -929,6 +961,7 @@ ucp_am_try_send_short(ucp_ep_h ep, uint16_t id, uint32_t flags,
                       const ucp_memtype_thresh_t *max_eager_short,
                       const ucp_request_param_t *param)
 {
+    ucs_trace_func("");
     if (ucs_unlikely(flags & UCP_AM_SEND_FLAG_RNDV)) {
         return UCS_ERR_NO_RESOURCE;
     }
@@ -993,6 +1026,7 @@ UCS_PROFILE_FUNC(ucs_status_ptr_t, ucp_am_send_nbx,
     size_t contig_length;
     ucp_operation_id_t op_id;
 
+    ucs_trace_func("");
     UCP_CONTEXT_CHECK_FEATURE_FLAGS(worker->context, UCP_FEATURE_AM,
                                     return UCS_STATUS_PTR(UCS_ERR_INVALID_PARAM));
     UCP_REQUEST_CHECK_PARAM(param);
@@ -1097,7 +1131,7 @@ ucs_status_ptr_t ucp_am_send_nb(ucp_ep_h ep, uint16_t id, const void *payload,
         .cb.send      = (ucp_send_nbx_callback_t)cb,
         .datatype     = datatype
     };
-
+ucs_trace_func("");
     return ucp_am_send_nbx(ep, id, NULL, 0, payload, count, &params);
 }
 
@@ -1116,6 +1150,7 @@ UCS_PROFILE_FUNC(ucs_status_ptr_t, ucp_am_recv_data_nbx,
     ucs_status_t status;
     size_t recv_length, rkey_length;
 
+    ucs_trace_func("");
     /* Sanity check if the descriptor has been released */
     if (ENABLE_PARAMS_CHECK &&
         ucs_unlikely(desc->flags & UCP_RECV_DESC_FLAG_RELEASED)) {
@@ -1247,6 +1282,7 @@ ucp_am_invoke_cb(ucp_worker_h worker, uint16_t am_id, void *user_hdr,
     ucp_am_recv_param_t param;
     unsigned flags;
 
+    ucs_trace_func("");
     if (ucs_unlikely(!ucp_am_recv_check_id(worker, am_id))) {
         return UCS_OK;
     }
@@ -1288,6 +1324,7 @@ static UCS_F_ALWAYS_INLINE ucs_status_t ucp_am_handler_common(
     ucs_status_t desc_status = UCS_OK;
     ucs_status_t status;
 
+    ucs_trace_func("");
     ucs_assert(total_length >= am_hdr->header_length + sizeof(*am_hdr));
 
     /* Initialize desc in advance, so the user could invoke ucp_am_recv_data_nbx
@@ -1359,6 +1396,7 @@ UCS_PROFILE_FUNC(ucs_status_t, ucp_am_handler_reply,
                                                   am_length - sizeof(*ftr));
     ucp_ep_h reply_ep;
 
+    ucs_trace_func("");
     UCP_WORKER_GET_VALID_EP_BY_ID(&reply_ep, worker, ftr->ep_id, return UCS_OK,
                                   "AM (reply proto)");
 
@@ -1375,6 +1413,7 @@ UCS_PROFILE_FUNC(ucs_status_t, ucp_am_handler,
     ucp_worker_h worker = am_arg;
     ucp_am_hdr_t *hdr   = am_data;
 
+    ucs_trace_func("");
     return ucp_am_handler_common(worker, hdr, am_length, NULL, am_flags, 0ul,
                                  "am_handler");
 }
@@ -1386,6 +1425,7 @@ ucp_am_find_first_rdesc(ucp_worker_h worker, ucp_ep_ext_t *ep_ext,
     ucp_recv_desc_t *rdesc;
     ucp_am_first_ftr_t *first_ftr;
 
+    ucs_trace_func("");
     ucs_list_for_each(rdesc, &ep_ext->am.started_ams, am_first.list) {
         first_ftr = (ucp_am_first_ftr_t*)(rdesc + 1);
         if (first_ftr->super.msg_id == msg_id) {
@@ -1400,6 +1440,7 @@ static UCS_F_ALWAYS_INLINE void
 ucp_am_copy_data_fragment(ucp_recv_desc_t *first_rdesc, void *data,
                           size_t length, size_t offset)
 {
+    ucs_trace_func("");
     UCS_PROFILE_NAMED_CALL("am_memcpy_recv", ucs_memcpy_relaxed,
                            UCS_PTR_BYTE_OFFSET(first_rdesc + 1, offset),
                            data, length);
@@ -1410,6 +1451,7 @@ static UCS_F_ALWAYS_INLINE uint64_t
 ucp_am_hdr_reply_ep(ucp_worker_h worker, uint16_t flags, ucp_ep_h ep,
                     ucp_ep_h *reply_ep_p)
 {
+    ucs_trace_func("");
     if (flags & UCP_AM_SEND_FLAG_REPLY) {
         *reply_ep_p = ep;
         return UCP_AM_RECV_ATTR_FIELD_REPLY_EP;
@@ -1433,6 +1475,7 @@ ucp_am_handle_unfinished(ucp_worker_h worker, ucp_recv_desc_t *first_rdesc,
     size_t desc_offset, user_hdr_length, total_size;
     uint16_t am_id;
 
+    ucs_trace_func("");
     ucp_am_copy_data_fragment(first_rdesc, data, length, offset);
 
     if (first_rdesc->am_first.remaining > 0) {
@@ -1507,6 +1550,7 @@ UCS_PROFILE_FUNC(ucs_status_t, ucp_am_long_first_handler,
 
     first_ftr = UCS_PTR_BYTE_OFFSET(am_data, am_length - sizeof(*first_ftr));
 
+    ucs_trace_func("");
     UCP_WORKER_GET_VALID_EP_BY_ID(&ep, worker, first_ftr->super.ep_id,
                                   return UCS_OK, "AM first fragment");
     ep_ext = ep->ext;
@@ -1616,6 +1660,7 @@ UCS_PROFILE_FUNC(ucs_status_t, ucp_am_long_middle_handler,
     ucp_ep_h ep;
     ucs_status_t status;
 
+    ucs_trace_func("");
     ucs_assertv(am_length > UCP_AM_MID_FRAG_META_LEN,
                 "%ld > %ld", am_length, UCP_AM_MID_FRAG_META_LEN);
 
@@ -1667,6 +1712,7 @@ ucs_status_t ucp_am_rndv_process_rts(void *arg, void *data, size_t length,
     ucs_status_t status, desc_status;
     void *hdr;
 
+    ucs_trace_func("");
     if (ENABLE_PARAMS_CHECK && !(am_cb->flags & UCP_AM_CB_PRIV_FLAG_NBX)) {
         ucs_error("active message callback registered with "
                   "ucp_worker_set_am_handler() API does not support rendezvous "
